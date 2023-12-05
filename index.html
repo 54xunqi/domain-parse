@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <title>域名搜索服务</title>
+    <style>
+        #recentSearches {
+            margin-top: 20px;
+        }
+        .recent-search {
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        .recent-search:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>域名搜索服务</h1>
+    <input type="text" id="searchQuery" placeholder="输入网址" onkeypress="handleKeyPress(event)">
+    <button onclick="search()">搜索</button>
+    <div id="recentSearches">
+        <h3>最近的搜索记录</h3>
+        <div id="searchesList"></div>
+    </div>
+    <div id="multiDomainResults"></div>
+
+
+    <script>
+        function search() {
+            var fullDomain = document.getElementById('searchQuery').value;
+    if (fullDomain) {
+        // 分割域名
+        var parts = fullDomain.split('.');
+        var name = parts.slice(0)[0];
+        var suffix = parts.slice(-1)[0];
+        loadRecentSearches()
+        checkMultipleDomains(name);
+
+        window.open(`results.html?name=${encodeURIComponent(name)}&suffix=${encodeURIComponent(suffix)}`, '_blank');
+            }
+           
+        }
+        function handleKeyPress(event) {
+            if (event.keyCode === 13) { // 13 是回车键的键值
+                search();
+            }
+        }
+
+        function loadRecentSearches() {
+            fetch('http://localhost:3000/recent-searches')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('最近搜索记录:', data);
+                    const listElement = document.getElementById('searchesList');
+                    listElement.innerHTML = '';
+                    data.forEach(domain => {
+                        const divItem = document.createElement('div');
+                        divItem.className = 'recent-search';
+                        divItem.textContent = domain;
+                        divItem.onclick = function() {
+                            document.getElementById('searchQuery').value = domain;
+                        };
+                        listElement.appendChild(divItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('获取最近搜索记录失败:', error);
+                });
+
+        }
+
+        function checkMultipleDomains(baseDomain) {
+        fetch(`http://localhost:3000/multi-check?name=${encodeURIComponent(baseDomain)}`)
+            .then(response => response.json())
+            .then(data => {
+                const resultsElement = document.getElementById('multiDomainResults');
+                resultsElement.innerHTML = '<h2>多域名检查结果</h2>';
+                data.forEach(item => {
+                    resultsElement.innerHTML += `<p>${item.domain}: ${item.available ? '可用' : '不可用'}</p >`;
+                });
+            })
+            .catch(error => {
+                console.error('多域名检查请求失败:', error);
+            });
+    }
+
+    </script>
+</body>
+</html>
