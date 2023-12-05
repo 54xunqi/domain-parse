@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>查询结果</title>
+</head>
+<body>
+    <h1>查询结果</h1>
+    <div id="results"></div>
+
+    <script>
+        function displayResults(data) {
+            var resultHtml = `<table border="1"><tr><th>字段</th><th>值</th></tr>`;
+            var fields = ['name', 'suffix', 'domain', 'creation_datetime', 'available', 'info'];
+            fields.forEach(field => {
+                resultHtml += `<tr><td>${field}</td><td>${data[field]}</td></tr>`;
+            });
+            resultHtml += `</table>`;
+            document.getElementById('results').innerHTML = resultHtml;
+        }
+
+        function getQueryParameter(param) {
+            var urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        window.onload = function() {
+            var name = getQueryParameter('name');
+    var suffix = getQueryParameter('suffix');
+    if (name && suffix) {
+        fetch(`http://localhost:3000/proxy?name=${encodeURIComponent(name)}&suffix=${encodeURIComponent(suffix)}`)
+          .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'ok') {
+                            displayResults(data);
+                        } else {
+                            document.getElementById('results').innerHTML = "未找到结果或域名格式错误";
+                        }
+                    });
+            } else {
+                document.getElementById('results').innerHTML = "没有查询数据";
+            }
+        }
+    </script>
+</body>
+</html>
